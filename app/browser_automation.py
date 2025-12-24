@@ -287,6 +287,9 @@ class ZoomBrowserAutomation:
                 except Exception:
                     continue
             
+            # Mute mic and stop camera to avoid broadcasting
+            self._mute_and_stop_video()
+
             # Dismiss any blocking modals (e.g., AI companion transcript notice)
             self._dismiss_popups()
 
@@ -336,6 +339,38 @@ class ZoomBrowserAutomation:
                 pass
         except Exception as e:
             logger.debug(f"Popup dismiss failed: {e}")
+
+    def _mute_and_stop_video(self):
+        """Ensure microphone and camera are off."""
+        try:
+            controls = [
+                # Audio mute controls
+                ('audio', [
+                    'button[aria-label*="mute"]',
+                    'button[aria-label*="Mute"]',
+                    'button:has-text("Mute")',
+                ]),
+                # Video stop controls
+                ('video', [
+                    'button[aria-label*="stop video"]',
+                    'button[aria-label*="Stop Video"]',
+                    'button:has-text("Stop Video")',
+                ]),
+            ]
+
+            for label, selectors in controls:
+                for selector in selectors:
+                    try:
+                        btn = self.page.locator(selector).first
+                        if btn.is_visible(timeout=1500):
+                            btn.click()
+                            logger.info(f"Toggled {label} via {selector}")
+                            time.sleep(0.5)
+                            break
+                    except Exception:
+                        continue
+        except Exception as e:
+            logger.debug(f"Mute/stop video failed: {e}")
     
     def _monitor_meeting(self):
         """Monitor the meeting and detect when it ends."""
