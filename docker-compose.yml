@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  zoomrec:
+    build: .
+    container_name: zoomrec
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./recordings:/app/recordings
+      - ./instance:/app/instance
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DATABASE_URL=sqlite:////app/instance/zoomrec.db
+      - RECORDINGS_DIR=/app/recordings
+      - MAX_CONCURRENT_RECORDINGS=3
+      - PORT=5000
+    restart: unless-stopped
+    # Required for browser automation
+    shm_size: '2gb'
+    # Allow access to audio devices (optional, for better audio)
+    # devices:
+    #   - /dev/snd:/dev/snd
+    cap_add:
+      - SYS_ADMIN  # Required for Chromium sandbox

@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ZoomRec{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ active_count }}</div>
+            <div class="stat-label"><i class="bi bi-record-circle me-1"></i>Active Recordings</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ completed_count }}</div>
+            <div class="stat-label"><i class="bi bi-check-circle me-1"></i>Completed</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card">
+            <div class="stat-number">{{ recordings|length }}</div>
+            <div class="stat-label"><i class="bi bi-collection me-1"></i>Total Recordings</div>
+        </div>
+    </div>
+</div>
+
+<!-- New Recording Form -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Start New Recording</h5>
+            </div>
+            <div class="card-body">
+                <form id="newRecordingForm">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label for="meetingUrl" class="form-label">Zoom Meeting URL</label>
+                            <input type="url" class="form-control" id="meetingUrl" name="meeting_url"
+                                   placeholder="https://zoom.us/j/123456789?pwd=..." required>
+                            <div class="form-text text-muted">
+                                Paste the full Zoom meeting URL including password if present
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="displayName" class="form-label">Display Name</label>
+                            <input type="text" class="form-control" id="displayName" name="display_name"
+                                   value="ZoomRec Bot" placeholder="Bot name in meeting">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100" id="startRecordingBtn">
+                                <i class="bi bi-record-circle me-1"></i>Start Recording
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recordings Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Recordings</h5>
+                <button class="btn btn-sm btn-outline-light" onclick="refreshRecordings()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="recordingsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Meeting URL</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th>Duration</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recording in recordings %}
+                            <tr data-recording-id="{{ recording.id }}">
+                                <td>{{ recording.id }}</td>
+                                <td class="recording-url" title="{{ recording.meeting_url }}">
+                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-info">
+                                        {{ recording.meeting_url[:50] }}{% if recording.meeting_url|length > 50 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ recording.status }}">
+                                        {% if recording.status == 'recording' %}
+                                            <i class="bi bi-record-fill me-1"></i>
+                                        {% elif recording.status == 'completed' %}
+                                            <i class="bi bi-check-circle me-1"></i>
+                                        {% elif recording.status == 'failed' %}
+                                            <i class="bi bi-x-circle me-1"></i>
+                                        {% elif recording.status == 'pending' %}
+                                            <i class="bi bi-hourglass-split me-1"></i>
+                                        {% elif recording.status == 'joining' %}
+                                            <i class="bi bi-box-arrow-in-right me-1"></i>
+                                        {% endif %}
+                                        {{ recording.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if recording.started_at %}
+                                        {{ recording.started_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ recording.duration_formatted }}</td>
+                                <td>{{ recording.file_size_formatted }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
+                                            <a href="{{ url_for('main.download_recording', recording_id=recording.id) }}" 
+                                               class="btn btn-success" title="Download">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if recording.status in ['pending', 'joining', 'recording'] %}
+                                            <button class="btn btn-warning" onclick="stopRecording({{ recording.id }})" title="Stop">
+                                                <i class="bi bi-stop-fill"></i>
+                                            </button>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('main.recording_detail', recording_id=recording.id) }}" 
+                                           class="btn btn-info" title="Details">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        
+                                        <button class="btn btn-danger" onclick="deleteRecording({{ recording.id }})" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No recordings yet. Start your first recording above!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Start recording
+document.getElementById('newRecordingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('startRecordingBtn');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<span class="loading"></span> Starting...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/recordings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                meeting_url: document.getElementById('meetingUrl').value,
+                display_name: document.getElementById('displayName').value
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Recording started successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to start recording'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+});
+
+// Stop recording
+async function stopRecording(recordingId) {
+    if (!confirm('Are you sure you want to stop this recording?')) return;
+    
+    try {
+        const response = await fetch(`/api/recordings/${recordingId}/stop`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            const data = await response.json();
+            alert('Error: ' + (data.error || 'Failed to stop recording'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Delete recording
+async function deleteRecording(recordingId) {
+    if (!confirm('Are you sure you want to delete this recording? This cannot be undone.')) return;
+    
+    try {
+        const response = await fetch(`/api/recordings/${recordingId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            const data = await response.json();
+            alert('Error: ' + (data.error || 'Failed to delete recording'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Refresh recordings
+function refreshRecordings() {
+    location.reload();
+}
+
+// Auto-refresh active recordings every 30 seconds
+{% if active_count > 0 %}
+setTimeout(refreshRecordings, 30000);
+{% endif %}
+</script>
+{% endblock %}

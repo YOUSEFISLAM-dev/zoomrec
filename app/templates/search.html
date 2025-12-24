@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - ZoomRec{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Search Results</li>
+            </ol>
+        </nav>
+        <h2><i class="bi bi-search me-2"></i>Search Results</h2>
+        <p class="text-muted">
+            Found {{ recordings|length }} recording(s) matching "<strong>{{ query }}</strong>"
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Meeting URL</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th>Duration</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recording in recordings %}
+                            <tr>
+                                <td>{{ recording.id }}</td>
+                                <td class="recording-url" title="{{ recording.meeting_url }}">
+                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-info">
+                                        {{ recording.meeting_url[:50] }}{% if recording.meeting_url|length > 50 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ recording.status }}">
+                                        {{ recording.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if recording.started_at %}
+                                        {{ recording.started_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ recording.duration_formatted }}</td>
+                                <td>{{ recording.file_size_formatted }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
+                                        <a href="{{ url_for('main.download_recording', recording_id=recording.id) }}" 
+                                           class="btn btn-success" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('main.recording_detail', recording_id=recording.id) }}" 
+                                           class="btn btn-info" title="Details">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-search fs-1 d-block mb-2"></i>
+                                    No recordings found matching your search.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
