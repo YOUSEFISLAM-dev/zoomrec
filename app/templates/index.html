@@ -3,62 +3,61 @@
 {% block title %}Dashboard - ZoomRec{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+<div class="hero mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+        <span class="pill"><i class="bi bi-camera-video-fill"></i> Headless Zoom capture</span>
+        <span class="pill"><i class="bi bi-hdd"></i> Indexed by meeting URL</span>
+        <span class="pill"><i class="bi bi-cloud-arrow-down"></i> Auto-save when done</span>
     </div>
-</div>
-
-<!-- Stats Row -->
-<div class="row mb-4">
-    <div class="col-md-4 mb-3">
-        <div class="card stat-card">
-            <div class="stat-number">{{ active_count }}</div>
-            <div class="stat-label"><i class="bi bi-record-circle me-1"></i>Active Recordings</div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="card stat-card">
-            <div class="stat-number">{{ completed_count }}</div>
-            <div class="stat-label"><i class="bi bi-check-circle me-1"></i>Completed</div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="card stat-card">
-            <div class="stat-number">{{ recordings|length }}</div>
-            <div class="stat-label"><i class="bi bi-collection me-1"></i>Total Recordings</div>
-        </div>
-    </div>
-</div>
-
-<!-- New Recording Form -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Start New Recording</h5>
+    <div class="row align-items-center">
+        <div class="col-lg-7 mb-3">
+            <h1 class="mb-2">ZoomRec Control Room</h1>
+            <p class="text-muted mb-3">Drop a Zoom link, let the bot join, record, and archive. Built for headless servers.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="metric">
+                    <div><i class="bi bi-record-circle text-danger"></i></div>
+                    <div>
+                        <div class="number">{{ active_count }}</div>
+                        <div class="text-muted small">Active</div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div><i class="bi bi-check2-circle text-success"></i></div>
+                    <div>
+                        <div class="number">{{ completed_count }}</div>
+                        <div class="text-muted small">Completed</div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div><i class="bi bi-collection text-info"></i></div>
+                    <div>
+                        <div class="number">{{ recordings|length }}</div>
+                        <div class="text-muted small">Total</div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+        </div>
+        <div class="col-lg-5">
+            <div class="card p-3 border-0">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="pill me-2"><i class="bi bi-lightning-charge-fill text-warning"></i> Quick start</div>
+                </div>
                 <form id="newRecordingForm">
-                    <div class="row g-3">
-                        <div class="col-md-7">
-                            <label for="meetingUrl" class="form-label">Zoom Meeting URL</label>
-                            <input type="url" class="form-control" id="meetingUrl" name="meeting_url"
-                                   placeholder="https://zoom.us/j/123456789?pwd=..." required>
-                            <div class="form-text text-muted">
-                                Paste the full Zoom meeting URL including password if present
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="displayName" class="form-label">Display Name</label>
-                            <input type="text" class="form-control" id="displayName" name="display_name"
-                                   value="ZoomRec Bot" placeholder="Bot name in meeting">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100" id="startRecordingBtn">
-                                <i class="bi bi-record-circle me-1"></i>Start Recording
-                            </button>
-                        </div>
+                    <div class="mb-3">
+                        <label for="meetingUrl" class="form-label">Zoom Meeting URL</label>
+                        <input type="url" class="form-control" id="meetingUrl" name="meeting_url"
+                               placeholder="https://zoom.us/j/123456789?pwd=..." required>
+                        <div class="form-text text-muted">Include the full URL with password if present.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="displayName" class="form-label">Display Name</label>
+                        <input type="text" class="form-control" id="displayName" name="display_name"
+                               value="ZoomRec Bot" placeholder="Name shown in meeting">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="startRecordingBtn">
+                            <i class="bi bi-record-circle me-1"></i> Start Recording
+                        </button>
                     </div>
                 </form>
             </div>
@@ -72,32 +71,37 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Recordings</h5>
-                <button class="btn btn-sm btn-outline-light" onclick="refreshRecordings()">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-light" onclick="refreshRecordings()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="recordingsTable">
+                    <table class="table table-hover mb-0 align-middle" id="recordingsTable">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Meeting URL</th>
+                                <th>Meeting</th>
                                 <th>Status</th>
                                 <th>Started</th>
                                 <th>Duration</th>
                                 <th>Size</th>
-                                <th>Actions</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for recording in recordings %}
                             <tr data-recording-id="{{ recording.id }}">
-                                <td>{{ recording.id }}</td>
+                                <td class="fw-semibold">#{{ recording.id }}</td>
                                 <td class="recording-url" title="{{ recording.meeting_url }}">
-                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-info">
-                                        {{ recording.meeting_url[:50] }}{% if recording.meeting_url|length > 50 %}...{% endif %}
+                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-info text-decoration-none">
+                                        {{ recording.meeting_url[:60] }}{% if recording.meeting_url|length > 60 %}...{% endif %}
                                     </a>
+                                    {% if recording.meeting_id %}
+                                        <div class="text-muted small">ID: {{ recording.meeting_id }}</div>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="status-badge status-{{ recording.status }}">
@@ -119,12 +123,12 @@
                                     {% if recording.started_at %}
                                         {{ recording.started_at.strftime('%Y-%m-%d %H:%M') }}
                                     {% else %}
-                                        -
+                                        <span class="text-muted">-</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ recording.duration_formatted }}</td>
                                 <td>{{ recording.file_size_formatted }}</td>
-                                <td>
+                                <td class="text-end">
                                     <div class="btn-group btn-group-sm">
                                         {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
                                             <a href="{{ url_for('main.download_recording', recording_id=recording.id) }}" 
