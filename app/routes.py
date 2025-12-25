@@ -114,7 +114,7 @@ def start_recording():
     """Start a new recording."""
     data = request.get_json() or {}
     meeting_url = data.get('meeting_url', '').strip()
-    display_name = data.get('display_name', 'حمبوله').strip()
+    display_name = data.get('display_name', 'ZoomRec Bot').strip()
     
     if not meeting_url:
         return jsonify({'error': 'meeting_url is required'}), 400

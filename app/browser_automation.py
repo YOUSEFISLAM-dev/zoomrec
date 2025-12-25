@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class ZoomBrowserAutomation:
     """Automates joining Zoom meetings via browser."""
     
-    def __init__(self, meeting_url, display_name='حمبوله'):
+    def __init__(self, meeting_url, display_name='ZoomRec Bot'):
         self.meeting_url = meeting_url
         self.display_name = display_name
         self.browser = None
