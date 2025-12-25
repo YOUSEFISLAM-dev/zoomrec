@@ -18,12 +18,13 @@ logger = logging.getLogger(__name__)
 class ZoomBrowserAutomation:
     """Automates joining Zoom meetings via browser."""
     
-    def __init__(self, meeting_url, display_name='ZoomRec Bot'):
+    def __init__(self, meeting_url, display_name='حمبوله'):
         self.meeting_url = meeting_url
         self.display_name = display_name
         self.browser = None
         self.context = None
         self.page = None
+        self.joined = False
     
     def join_meeting(self):
         """Join the Zoom meeting."""
@@ -247,6 +248,9 @@ class ZoomBrowserAutomation:
                         break
                 except Exception:
                     continue
+
+            # Turn off mic/cam on the preview toolbar BEFORE joining
+            self._ensure_preview_controls_off()
             
             # Click the Join button
             join_selectors = [
@@ -263,6 +267,7 @@ class ZoomBrowserAutomation:
                     if element.is_visible(timeout=3000):
                         element.click()
                         logger.info(f"Clicked join button: {selector}")
+                        self.joined = True
                         time.sleep(5)
                         break
                 except Exception:
@@ -343,34 +348,97 @@ class ZoomBrowserAutomation:
     def _mute_and_stop_video(self):
         """Ensure microphone and camera are off."""
         try:
-            controls = [
-                # Audio mute controls
-                ('audio', [
+            controls = {
+                'audio': [
                     'button[aria-label*="mute"]',
                     'button[aria-label*="Mute"]',
                     'button:has-text("Mute")',
-                ]),
-                # Video stop controls
-                ('video', [
+                    'button[aria-label*="Unmute"]',  # when already muted, label often says Unmute
+                ],
+                'video': [
                     'button[aria-label*="stop video"]',
                     'button[aria-label*="Stop Video"]',
+                    'button:has-text("Stop Video")',
+                    'button[aria-label*="Start Video"]',  # when already off
+                ],
+            }
+
+            def ensure_off(label, selectors):
+                for selector in selectors:
+                    try:
+                        btn = self.page.locator(selector).first
+                        if not btn.is_visible(timeout=1200):
+                            continue
+
+                        state = (btn.get_attribute('aria-label') or '' or '').lower()
+                        state_text = ''
+                        try:
+                            state_text = (btn.inner_text() or '').lower()
+                        except Exception:
+                            pass
+                        combined = state + ' ' + state_text
+
+                        if label == 'video':
+                            # If label says stop video, video is ON -> click to turn OFF.
+                            if 'stop video' in combined:
+                                btn.click()
+                                logger.info(f"Turned video off via {selector}")
+                                time.sleep(0.3)
+                                return True
+                            # If it says start video, it is already OFF.
+                            if 'start video' in combined:
+                                return True
+                        else:  # audio
+                            # If label says mute (and not unmute), audio is ON -> click to mute.
+                            if 'mute' in combined and 'unmute' not in combined:
+                                btn.click()
+                                logger.info(f"Muted audio via {selector}")
+                                time.sleep(0.3)
+                                return True
+                            # If it says unmute, it's already muted.
+                            if 'unmute' in combined:
+                                return True
+                    except Exception:
+                        continue
+                return False
+
+            # Attempt twice to ensure state sticks (Zoom sometimes ignores first click)
+            for _ in range(2):
+                ensure_off('video', controls['video'])
+                ensure_off('audio', controls['audio'])
+                time.sleep(0.2)
+        except Exception as e:
+            logger.debug(f"Mute/stop video failed: {e}")
+
+    def _ensure_preview_controls_off(self):
+        """On the pre-join screen, explicitly click the preview toolbar mute/stop buttons if present."""
+        try:
+            preview_controls = [
+                ('audio', [
+                    'button[aria-label*="Mute"]',
+                    'button[aria-label*="mute"]',
+                    'button:has-text("Mute")',
+                ]),
+                ('video', [
+                    'button[aria-label*="Stop Video"]',
+                    'button[aria-label*="stop video"]',
                     'button:has-text("Stop Video")',
                 ]),
             ]
 
-            for label, selectors in controls:
+            for label, selectors in preview_controls:
                 for selector in selectors:
                     try:
                         btn = self.page.locator(selector).first
-                        if btn.is_visible(timeout=1500):
+                        if btn.is_visible(timeout=1200):
                             btn.click()
-                            logger.info(f"Toggled {label} via {selector}")
-                            time.sleep(0.5)
+                            logger.info(f"Preview: turned off {label} via {selector}")
+                            time.sleep(0.3)
                             break
                     except Exception:
                         continue
         except Exception as e:
-            logger.debug(f"Mute/stop video failed: {e}")
+            logger.debug(f"Preview control toggle failed: {e}")
     
     def _monitor_meeting(self):
         """Monitor the meeting and detect when it ends."""
@@ -382,11 +450,12 @@ class ZoomBrowserAutomation:
             'text="Meeting has ended"',
             'text="You have been removed"',
             'text="The meeting has ended"',
+            'text="Join Meeting"',  # landing page after end
             '.meeting-ended',
             '#wc-footer:not(:visible)',  # Footer disappears when meeting ends
         ]
-        
-        check_interval = 10  # seconds
+
+        check_interval = 3  # seconds (faster detection)
         max_duration = 8 * 3600  # 8 hours max
         elapsed = 0
         
@@ -399,11 +468,54 @@ class ZoomBrowserAutomation:
                 for selector in end_indicators:
                     try:
                         element = self.page.locator(selector).first
-                        if element.is_visible(timeout=1000):
+                        if element.is_visible(timeout=800):
                             logger.info(f"Meeting ended: {selector}")
+                            try:
+                                # Click OK/close if present to exit cleanly
+                                ok_btn = self.page.get_by_text("OK", exact=False)
+                                if ok_btn.is_visible(timeout=500):
+                                    ok_btn.click()
+                            except Exception:
+                                pass
                             return
                     except Exception:
                         continue
+
+                # If we already joined and now see a Join Meeting landing (no footer), treat as ended
+                if self.joined:
+                    try:
+                        join_btn = self.page.get_by_text("Join Meeting", exact=False)
+                        footer_visible = False
+                        try:
+                            footer = self.page.locator('#wc-footer').first
+                            footer_visible = footer.is_visible(timeout=500)
+                        except Exception:
+                            footer_visible = False
+                        if join_btn.is_visible(timeout=800) and not footer_visible:
+                            logger.info("Meeting ended: redirected to join landing")
+                            return
+                    except Exception:
+                        pass
+
+                # Text scan fallback (handles modals or nested frames)
+                try:
+                    body_text = (self.page.inner_text('body') or '').lower()
+                    if any(phrase in body_text for phrase in [
+                        'meeting has been ended',
+                        'host has ended this meeting',
+                        'meeting has ended by host',
+                        'meeting has ended',
+                    ]):
+                        logger.info("Meeting ended detected via text scan")
+                        try:
+                            ok_btn = self.page.get_by_text("OK", exact=False)
+                            if ok_btn.is_visible(timeout=500):
+                                ok_btn.click()
+                        except Exception:
+                            pass
+                        return
+                except Exception:
+                    pass
                 
                 # Check if page has navigated away
                 current_url = self.page.url

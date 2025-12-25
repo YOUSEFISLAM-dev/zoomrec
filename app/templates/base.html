@@ -21,6 +21,26 @@
             --success-color: #65F0A5;
             --warning-color: #FFD166;
             --danger-color: #FF6B6B;
+
+            --link: #7FE9FF;
+            --nav-bg: rgba(13, 18, 30, 0.75);
+            --footer-text: rgba(255, 255, 255, 0.55);
+            --shadow: rgba(0, 0, 0, 0.35);
+            --icon-dark-filter: invert(1) brightness(1.2);
+        }
+
+        body[data-theme="light"] {
+            --surface: rgba(255, 255, 255, 0.78);
+            --surface-strong: rgba(255, 255, 255, 0.95);
+            --border: rgba(12, 16, 32, 0.12);
+            --text-color: #0C1020;
+            --muted: #5C6677;
+
+            --link: #0B63CE;
+            --nav-bg: rgba(255, 255, 255, 0.72);
+            --footer-text: rgba(12, 16, 32, 0.55);
+            --shadow: rgba(12, 16, 32, 0.12);
+            --icon-dark-filter: none;
         }
         
         body {
@@ -32,12 +52,31 @@
             font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
             letter-spacing: 0.01em;
         }
+
+        body[data-theme="light"] {
+            background: radial-gradient(circle at 15% 20%, rgba(90, 232, 197, 0.18), transparent 28%),
+                        radial-gradient(circle at 85% 15%, rgba(255, 122, 158, 0.18), transparent 25%),
+                        linear-gradient(135deg, #f6f8ff 0%, #f3fbff 100%);
+        }
         
         .navbar {
-            background: rgba(13, 18, 30, 0.75) !important;
+            background: var(--nav-bg) !important;
             backdrop-filter: blur(14px);
             border-bottom: 1px solid var(--border);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 10px 40px var(--shadow);
+
+            --bs-navbar-color: rgba(234, 244, 255, 0.85);
+            --bs-navbar-hover-color: rgba(234, 244, 255, 1);
+            --bs-navbar-active-color: rgba(234, 244, 255, 1);
+            --bs-navbar-toggler-border-color: var(--border);
+            --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28234,%20244,%20255,%200.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        body[data-theme="light"] .navbar {
+            --bs-navbar-color: rgba(12, 16, 32, 0.78);
+            --bs-navbar-hover-color: rgba(12, 16, 32, 1);
+            --bs-navbar-active-color: rgba(12, 16, 32, 1);
+            --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2812,%2016,%2032,%200.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
         
         .navbar-brand {
@@ -50,7 +89,7 @@
             background: linear-gradient(145deg, var(--surface) 0%, var(--surface-strong) 100%);
             border: 1px solid var(--border);
             border-radius: 18px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 20px 60px var(--shadow);
         }
         
         .card-header {
@@ -75,12 +114,27 @@
             border-color: var(--border);
             color: var(--text-color);
         }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border);
+            color: var(--text-color);
+        }
+
+        body[data-theme="light"] .btn-outline-light:hover {
+            background: rgba(12, 16, 32, 0.04);
+        }
         
         .form-control, .form-select {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--border);
             color: var(--text-color);
             border-radius: 12px;
+        }
+
+        body[data-theme="light"] .form-control,
+        body[data-theme="light"] .form-select {
+            background: rgba(255, 255, 255, 0.75);
         }
         
         .form-control:focus, .form-select:focus {
@@ -92,6 +146,35 @@
         
         .form-control::placeholder {
             color: rgba(255, 255, 255, 0.5);
+        }
+
+        body[data-theme="light"] .form-control::placeholder {
+            color: rgba(12, 16, 32, 0.45);
+        }
+
+        .text-muted {
+            color: var(--muted) !important;
+        }
+
+        a {
+            color: var(--link);
+        }
+
+        a:hover {
+            filter: brightness(1.05);
+        }
+
+        .breadcrumb {
+            --bs-breadcrumb-divider-color: var(--muted);
+        }
+
+        .breadcrumb a {
+            color: var(--link);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
         }
         
         .table {
@@ -131,21 +214,25 @@
         .table-hover tbody tr:hover {
             background: rgba(255, 255, 255, 0.03);
         }
+
+        body[data-theme="light"] .table-hover tbody tr:hover {
+            background: rgba(12, 16, 32, 0.03);
+        }
         
         .status-badge {
             padding: 0.35em 0.65em;
             border-radius: 6px;
             font-size: 0.85em;
             font-weight: 500;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
         }
         
-        .status-pending { background: #6c757d; }
-        .status-joining { background: #17a2b8; }
-        .status-recording { background: var(--success-color); animation: pulse 2s infinite; }
-        .status-completed { background: var(--primary-color); }
-        .status-failed { background: var(--danger-color); }
-        .status-stopped { background: var(--warning-color); color: #000; }
+        .status-pending { background: #6c757d; color: #fff; }
+        .status-joining { background: #17a2b8; color: #fff; }
+        .status-recording { background: var(--success-color); color: #0c1020; animation: pulse 2s infinite; }
+        .status-completed { background: var(--primary-color); color: #0c1020; }
+        .status-failed { background: var(--danger-color); color: #fff; }
+        .status-stopped { background: var(--warning-color); color: #0c1020; }
         
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -181,7 +268,27 @@
             border-top: 1px solid rgba(45, 140, 255, 0.2);
             padding: 1rem 0;
             margin-top: 2rem;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--footer-text);
+        }
+
+        body[data-theme="light"] .footer {
+            border-top: 1px solid var(--border);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-color);
+        }
+
+        body[data-theme="light"] .theme-toggle {
+            background: rgba(12, 16, 32, 0.03);
         }
 
         .hero {
@@ -191,7 +298,11 @@
             overflow: hidden;
             background: linear-gradient(135deg, rgba(90, 232, 197, 0.12), rgba(15, 19, 33, 0.9));
             border: 1px solid var(--border);
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 24px 80px var(--shadow);
+        }
+
+        body[data-theme="light"] .hero {
+            background: linear-gradient(135deg, rgba(90, 232, 197, 0.20), rgba(255, 255, 255, 0.92));
         }
 
         .hero h1 {
@@ -211,6 +322,10 @@
             font-size: 0.85rem;
         }
 
+        body[data-theme="light"] .pill {
+            background: rgba(12, 16, 32, 0.04);
+        }
+
         .metric {
             display: flex;
             align-items: center;
@@ -219,6 +334,10 @@
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
+        }
+
+        body[data-theme="light"] .metric {
+            background: rgba(12, 16, 32, 0.03);
         }
 
         .metric .number {
@@ -231,10 +350,24 @@
             display: inline-block;
             width: 1rem;
             height: 1rem;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid var(--border);
             border-radius: 50%;
-            border-top-color: #fff;
+            border-top-color: var(--text-color);
             animation: spin 1s ease-in-out infinite;
+        }
+
+        .icon-btn-img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+
+        .icon-dark-filter {
+            filter: var(--icon-dark-filter);
+        }
+
+        .text-link {
+            color: var(--link) !important;
         }
         
         @keyframes spin {
@@ -243,8 +376,8 @@
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+<body data-theme="dark">
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="bi bi-camera-video-fill me-2"></i>ZoomRec
@@ -260,11 +393,14 @@
                         </a>
                     </li>
                 </ul>
-                <form class="d-flex" action="{{ url_for('main.search') }}" method="GET">
+                <form class="d-flex align-items-center gap-2" action="{{ url_for('main.search') }}" method="GET">
                     <input class="form-control me-2" type="search" name="q" placeholder="Search by URL..." 
                            value="{{ request.args.get('q', '') }}">
                     <button class="btn btn-outline-light" type="submit">
-                        <i class="bi bi-search"></i>
+                        <img src="https://img.icons8.com/ios-filled/50/search--v1.png" alt="Search" class="icon-btn-img icon-dark-filter">
+                    </button>
+                    <button class="theme-toggle" type="button" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+                        <i class="bi bi-moon-stars" id="themeToggleIcon"></i>
                     </button>
                 </form>
             </div>
@@ -293,6 +429,37 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const root = document.body;
+            const btn = document.getElementById('themeToggle');
+            const icon = document.getElementById('themeToggleIcon');
+
+            function getPreferredTheme() {
+                const stored = localStorage.getItem('zoomrec-theme');
+                if (stored === 'light' || stored === 'dark') return stored;
+                return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            }
+
+            function applyTheme(theme) {
+                root.setAttribute('data-theme', theme);
+                if (icon) {
+                    icon.className = theme === 'light' ? 'bi bi-moon-stars' : 'bi bi-brightness-high';
+                }
+            }
+
+            applyTheme(getPreferredTheme());
+
+            if (btn) {
+                btn.addEventListener('click', function () {
+                    const current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+                    const next = current === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('zoomrec-theme', next);
+                    applyTheme(next);
+                });
+            }
+        })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

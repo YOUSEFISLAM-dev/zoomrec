@@ -36,7 +36,7 @@
                     <tr>
                         <th style="width: 150px;">Meeting URL</th>
                         <td>
-                            <a href="{{ recording.meeting_url }}" target="_blank" class="text-info">
+                            <a href="{{ recording.meeting_url }}" target="_blank">
                                 {{ recording.meeting_url }}
                             </a>
                         </td>
@@ -107,18 +107,18 @@
                 {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
                 <a href="{{ url_for('main.download_recording', recording_id=recording.id) }}" 
                    class="btn btn-success">
-                    <i class="bi bi-download me-2"></i>Download Recording
+                    <img src="https://img.icons8.com/?size=100&id=VGQlJM067vkN&format=png&color=000000" alt="Download" class="icon-btn-img icon-dark-filter me-1">Download Recording
                 </a>
                 {% endif %}
                 
                 {% if recording.status in ['pending', 'joining', 'recording'] %}
-                <button class="btn btn-warning" onclick="stopRecording({{ recording.id }})">
-                    <i class="bi bi-stop-fill me-2"></i>Stop Recording
+                <button class="btn btn-warning" onclick="stopAndLeave({{ recording.id }})">
+                    <img src="{{ url_for('static', filename='icons8-logout.gif') }}" alt="Stop and leave" class="icon-btn-img me-1">Stop &amp; Leave
                 </button>
                 {% endif %}
                 
                 <button class="btn btn-danger" onclick="deleteRecording({{ recording.id }})">
-                    <i class="bi bi-trash me-2"></i>Delete Recording
+                    <img src="https://img.icons8.com/?size=100&id=13086&format=png&color=000000" alt="Delete" class="icon-btn-img icon-dark-filter me-1">Delete Recording
                 </button>
                 
                 <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
@@ -135,7 +135,7 @@
                 <p class="text-muted small">Find other recordings from the same meeting:</p>
                 <a href="{{ url_for('main.search', q=recording.meeting_id or recording.meeting_url_hash) }}" 
                    class="btn btn-outline-primary w-100">
-                    <i class="bi bi-search me-2"></i>Search Related
+                    <img src="https://img.icons8.com/ios-filled/50/search--v1.png" alt="Search" class="icon-btn-img icon-dark-filter me-1">Search Related
                 </a>
             </div>
         </div>
@@ -145,19 +145,19 @@
 
 {% block extra_js %}
 <script>
-async function stopRecording(recordingId) {
-    if (!confirm('Are you sure you want to stop this recording?')) return;
-    
+async function stopAndLeave(recordingId) {
+    if (!confirm('Stop and leave this meeting right now?')) return;
+
     try {
-        const response = await fetch(`/api/recordings/${recordingId}/stop`, {
+        const response = await fetch(`/api/recordings/${recordingId}/stop-leave`, {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             location.reload();
         } else {
             const data = await response.json();
-            alert('Error: ' + (data.error || 'Failed to stop recording'));
+            alert('Error: ' + (data.error || 'Failed to stop and leave'));
         }
     } catch (error) {
         alert('Error: ' + error.message);

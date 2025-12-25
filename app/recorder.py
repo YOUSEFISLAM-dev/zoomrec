@@ -104,17 +104,17 @@ class RecordingManager:
                 with self._lock:
                     self.active_recordings.pop(recording_id, None)
     
-    def stop_recording(self, recording_id):
-        """Stop an active recording."""
+    def stop_recording(self, recording_id, leave_first=False):
+        """Stop an active recording. If leave_first, kill browser immediately to exit meeting."""
         from app import db, create_app
         from app.models import Recording
-        
+
         with self._lock:
             session = self.active_recordings.get(recording_id)
-        
+
         if session:
-            session.stop()
-            
+            session.stop(leave_first=leave_first)
+
             app = create_app()
             with app.app_context():
                 recording = Recording.query.get(recording_id)
@@ -129,6 +129,10 @@ class RecordingManager:
                     db.session.commit()
             return True
         return False
+
+    def stop_and_leave(self, recording_id):
+        """Stop recording and leave meeting immediately (browser-first)."""
+        return self.stop_recording(recording_id, leave_first=True)
     
     def get_active_count(self):
         """Get number of active recordings."""
@@ -219,7 +223,8 @@ class RecordingSession:
                 '-ac'
             ],
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
+            preexec_fn=os.setsid
         )
         
         os.environ['DISPLAY'] = display
@@ -257,7 +262,8 @@ class RecordingSession:
             ['python3', script_path],
             env=env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            preexec_fn=os.setsid  # isolate process group so we can kill fast
         )
         logger.info(f"Started browser automation for meeting: {self.meeting_url}")
     
@@ -287,7 +293,8 @@ class RecordingSession:
             ffmpeg_cmd,
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
+            preexec_fn=os.setsid  # isolate process group for fast teardown
         )
         logger.info(f"Started FFmpeg recording to {self.output_path}")
     
@@ -301,35 +308,46 @@ class RecordingSession:
         time.sleep(2)
         self.stop()
     
-    def stop(self):
-        """Stop all recording processes."""
+    def stop(self, leave_first=False):
+        """Stop all recording processes. If leave_first, kill browser first to exit meeting immediately."""
         self.end_time = datetime.now()
-        
-        # Stop FFmpeg gracefully
+
+        def _kill_process_group(proc, timeout_terminate=2, timeout_kill=1):
+            if not proc or proc.poll() is not None:
+                return
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                proc.wait(timeout=timeout_terminate)
+            except Exception:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except Exception:
+                    pass
+                try:
+                    proc.wait(timeout=timeout_kill)
+                except Exception:
+                    pass
+
+        if leave_first:
+            _kill_process_group(self.browser_process, timeout_terminate=1, timeout_kill=1)
+
+        # Stop FFmpeg
         if self.ffmpeg_process and self.ffmpeg_process.poll() is None:
             try:
                 self.ffmpeg_process.stdin.write(b'q')
                 self.ffmpeg_process.stdin.flush()
-                self.ffmpeg_process.wait(timeout=10)
+                self.ffmpeg_process.wait(timeout=4)
             except Exception:
-                self.ffmpeg_process.terminate()
-                try:
-                    self.ffmpeg_process.wait(timeout=5)
-                except Exception:
-                    self.ffmpeg_process.kill()
-        
-        # Stop browser
-        if self.browser_process and self.browser_process.poll() is None:
-            self.browser_process.terminate()
-            try:
-                self.browser_process.wait(timeout=5)
-            except Exception:
-                self.browser_process.kill()
-        
+                _kill_process_group(self.ffmpeg_process)
+
+        # Stop browser (if not already)
+        if not leave_first:
+            _kill_process_group(self.browser_process, timeout_terminate=2, timeout_kill=1)
+
         # Stop Xvfb
         if hasattr(self, 'xvfb_process') and self.xvfb_process:
-            self.xvfb_process.terminate()
-        
+            _kill_process_group(self.xvfb_process, timeout_terminate=1, timeout_kill=1)
+
         logger.info(f"Stopped recording session {self.recording_id}")
     
     def get_duration(self):

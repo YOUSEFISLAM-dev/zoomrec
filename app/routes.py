@@ -114,7 +114,7 @@ def start_recording():
     """Start a new recording."""
     data = request.get_json() or {}
     meeting_url = data.get('meeting_url', '').strip()
-    display_name = data.get('display_name', 'ZoomRec Bot').strip()
+    display_name = data.get('display_name', 'حمبوله').strip()
     
     if not meeting_url:
         return jsonify({'error': 'meeting_url is required'}), 400
@@ -172,6 +172,23 @@ def stop_recording(recording_id):
     
     if success:
         return jsonify({'message': 'Recording stopped', 'recording': recording.to_dict()})
+    else:
+        return jsonify({'error': 'Failed to stop recording'}), 500
+
+
+@api_bp.route('/recordings/<int:recording_id>/stop-leave', methods=['POST'])
+def stop_and_leave_recording(recording_id):
+    """Stop recording and leave meeting immediately."""
+    recording = Recording.query.get_or_404(recording_id)
+
+    if recording.status not in ['pending', 'joining', 'recording']:
+        return jsonify({'error': 'Recording is not active'}), 400
+
+    manager = get_recording_manager()
+    success = manager.stop_and_leave(recording_id)
+
+    if success:
+        return jsonify({'message': 'Recording stopped and left', 'recording': recording.to_dict()})
     else:
         return jsonify({'error': 'Failed to stop recording'}), 500
 

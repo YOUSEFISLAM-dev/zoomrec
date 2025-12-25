@@ -40,7 +40,7 @@
                             <tr>
                                 <td>{{ recording.id }}</td>
                                 <td class="recording-url" title="{{ recording.meeting_url }}">
-                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-info">
+                                    <a href="{{ recording.meeting_url }}" target="_blank">
                                         {{ recording.meeting_url[:50] }}{% if recording.meeting_url|length > 50 %}...{% endif %}
                                     </a>
                                 </td>
@@ -63,12 +63,12 @@
                                         {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
                                         <a href="{{ url_for('main.download_recording', recording_id=recording.id) }}" 
                                            class="btn btn-success" title="Download">
-                                            <i class="bi bi-download"></i>
+                                            <img src="https://img.icons8.com/?size=100&id=VGQlJM067vkN&format=png&color=000000" alt="Download" class="icon-btn-img icon-dark-filter">
                                         </a>
                                         {% endif %}
                                         <a href="{{ url_for('main.recording_detail', recording_id=recording.id) }}" 
                                            class="btn btn-info" title="Details">
-                                            <i class="bi bi-info-circle"></i>
+                                            <img src="https://img.icons8.com/?size=100&id=Plgmgi7oHlL6&format=png&color=000000" alt="Info" class="icon-btn-img icon-dark-filter">
                                         </a>
                                     </div>
                                 </td>

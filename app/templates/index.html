@@ -12,27 +12,27 @@
     <div class="row align-items-center">
         <div class="col-lg-7 mb-3">
             <h1 class="mb-2">ZoomRec Control Room</h1>
-            <p class="text-muted mb-3">Drop a Zoom link, let the bot join, record, and archive. Built for headless servers.</p>
+            <p class=" mb-3">Drop a Zoom link, let the bot join, record, and archive. Built for headless servers.</p>
             <div class="d-flex flex-wrap gap-2">
                 <div class="metric">
                     <div><i class="bi bi-record-circle text-danger"></i></div>
                     <div>
                         <div class="number">{{ active_count }}</div>
-                        <div class="text-muted small">Active</div>
+                        <div class=" small">Active</div>
                     </div>
                 </div>
                 <div class="metric">
                     <div><i class="bi bi-check2-circle text-success"></i></div>
                     <div>
                         <div class="number">{{ completed_count }}</div>
-                        <div class="text-muted small">Completed</div>
+                        <div class=" small">Completed</div>
                     </div>
                 </div>
                 <div class="metric">
-                    <div><i class="bi bi-collection text-info"></i></div>
+                    <div><i class="bi bi-collection text-link"></i></div>
                     <div>
                         <div class="number">{{ recordings|length }}</div>
-                        <div class="text-muted small">Total</div>
+                        <div class=" small">Total</div>
                     </div>
                 </div>
             </div>
@@ -47,16 +47,16 @@
                         <label for="meetingUrl" class="form-label">Zoom Meeting URL</label>
                         <input type="url" class="form-control" id="meetingUrl" name="meeting_url"
                                placeholder="https://zoom.us/j/123456789?pwd=..." required>
-                        <div class="form-text text-muted">Include the full URL with password if present.</div>
+                        <div class="form-text ">Include the full URL with password if present.</div>
                     </div>
                     <div class="mb-3">
                         <label for="displayName" class="form-label">Display Name</label>
                         <input type="text" class="form-control" id="displayName" name="display_name"
-                               value="ZoomRec Bot" placeholder="Name shown in meeting">
+                               value="حمبوله" placeholder="Name shown in meeting">
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary" id="startRecordingBtn">
-                            <i class="bi bi-record-circle me-1"></i> Start Recording
+                            <img src="https://img.icons8.com/fluency/48/play--v1.png" alt="Start" class="icon-btn-img me-1"> Start Recording
                         </button>
                     </div>
                 </form>
@@ -96,11 +96,11 @@
                             <tr data-recording-id="{{ recording.id }}">
                                 <td class="fw-semibold">#{{ recording.id }}</td>
                                 <td class="recording-url" title="{{ recording.meeting_url }}">
-                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-info text-decoration-none">
+                                    <a href="{{ recording.meeting_url }}" target="_blank" class="text-decoration-none">
                                         {{ recording.meeting_url[:60] }}{% if recording.meeting_url|length > 60 %}...{% endif %}
                                     </a>
                                     {% if recording.meeting_id %}
-                                        <div class="text-muted small">ID: {{ recording.meeting_id }}</div>
+                                        <div class=" small">ID: {{ recording.meeting_id }}</div>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -123,7 +123,7 @@
                                     {% if recording.started_at %}
                                         {{ recording.started_at.strftime('%Y-%m-%d %H:%M') }}
                                     {% else %}
-                                        <span class="text-muted">-</span>
+                                        <span class="">-</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ recording.duration_formatted }}</td>
@@ -133,30 +133,30 @@
                                         {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
                                             <a href="{{ url_for('main.download_recording', recording_id=recording.id) }}" 
                                                class="btn btn-success" title="Download">
-                                                <i class="bi bi-download"></i>
+                                                <img src="https://img.icons8.com/?size=100&id=VGQlJM067vkN&format=png&color=000000" alt="Download" class="icon-btn-img icon-dark-filter">
                                             </a>
                                         {% endif %}
                                         
                                         {% if recording.status in ['pending', 'joining', 'recording'] %}
-                                            <button class="btn btn-warning" onclick="stopRecording({{ recording.id }})" title="Stop">
-                                                <i class="bi bi-stop-fill"></i>
+                                            <button class="btn btn-warning" onclick="stopAndLeave({{ recording.id }})" title="Stop &amp; Leave">
+                                                <img src="{{ url_for('static', filename='icons8-logout.gif') }}" alt="Stop and leave" class="icon-btn-img">
                                             </button>
                                         {% endif %}
                                         
                                         <a href="{{ url_for('main.recording_detail', recording_id=recording.id) }}" 
                                            class="btn btn-info" title="Details">
-                                            <i class="bi bi-info-circle"></i>
+                                            <img src="https://img.icons8.com/?size=100&id=Plgmgi7oHlL6&format=png&color=000000" alt="Info" class="icon-btn-img icon-dark-filter">
                                         </a>
                                         
                                         <button class="btn btn-danger" onclick="deleteRecording({{ recording.id }})" title="Delete">
-                                            <i class="bi bi-trash"></i>
+                                            <img src="https://img.icons8.com/?size=100&id=13086&format=png&color=000000" alt="Delete" class="icon-btn-img icon-dark-filter">
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 ">
                                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                     No recordings yet. Start your first recording above!
                                 </td>
@@ -208,20 +208,20 @@ document.getElementById('newRecordingForm').addEventListener('submit', async fun
     }
 });
 
-// Stop recording
-async function stopRecording(recordingId) {
-    if (!confirm('Are you sure you want to stop this recording?')) return;
-    
+// Stop & leave recording
+async function stopAndLeave(recordingId) {
+    if (!confirm('Stop and leave this meeting right now?')) return;
+
     try {
-        const response = await fetch(`/api/recordings/${recordingId}/stop`, {
+        const response = await fetch(`/api/recordings/${recordingId}/stop-leave`, {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             location.reload();
         } else {
             const data = await response.json();
-            alert('Error: ' + (data.error || 'Failed to stop recording'));
+            alert('Error: ' + (data.error || 'Failed to stop and leave'));
         }
     } catch (error) {
         alert('Error: ' + error.message);
