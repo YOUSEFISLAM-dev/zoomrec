@@ -11,7 +11,7 @@
                 <li class="breadcrumb-item active">Recording #{{ recording.id }}</li>
             </ol>
         </nav>
-        <h2><i class="bi bi-file-play me-2"></i>Recording Details</h2>
+        <h2><img src="https://img.icons8.com/?size=100&id=12380&format=png&color=000000" alt="Recording Details" class="icon-btn-img icon-dark-filter me-2">Recording Details</h2>
     </div>
 </div>
 
@@ -86,7 +86,7 @@
         {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-play-circle me-2"></i>Video Player</h5>
+                <h5 class="mb-0"><img src="https://img.icons8.com/?size=100&id=114331&format=png&color=000000" alt="Video" class="icon-btn-img icon-dark-filter me-2">Video Player</h5>
             </div>
             <div class="card-body">
                 <video controls class="w-100" style="max-height: 500px; background: #000;">
@@ -101,7 +101,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Actions</h5>
+                <h5 class="mb-0"><img src="https://img.icons8.com/?size=100&id=12085&format=png&color=000000" alt="Actions" class="icon-btn-img icon-dark-filter me-2">Actions</h5>
             </div>
             <div class="card-body d-grid gap-2">
                 {% if recording.status in ['completed', 'stopped'] and recording.file_path %}
@@ -129,7 +129,7 @@
 
         <div class="card mt-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Quick Search</h5>
+                <h5 class="mb-0"><img src="https://img.icons8.com/?size=100&id=77253&format=png&color=000000" alt="Quick Search" class="icon-btn-img icon-dark-filter me-2">Quick Search</h5>
             </div>
             <div class="card-body">
                 <p class="text-muted small">Find other recordings from the same meeting:</p>

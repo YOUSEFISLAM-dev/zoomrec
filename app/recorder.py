@@ -79,11 +79,25 @@ class RecordingManager:
                     
                     # Update final status
                     recording = Recording.query.get(recording_id)
-                    recording.status = 'completed'
+                    recording.status = 'processing'
                     recording.ended_at = datetime.utcnow()
                     recording.file_path = session.output_path
                     recording.filename = os.path.basename(session.output_path)
+                    db.session.commit()
                     
+                    # Auto-trim black frames from start
+                    if os.path.exists(session.output_path):
+                        from app.trimmer import auto_trim_recording
+                        logger.info(f"Auto-trimming recording {recording_id}")
+                        trim_result = auto_trim_recording(session.output_path)
+                        if trim_result.get('error'):
+                            logger.warning(f"Trim warning: {trim_result['error']}")
+                        elif trim_result.get('trimmed'):
+                            logger.info(f"Trimmed {trim_result['trim_seconds']:.1f}s of black frames")
+                    
+                    # Update file info after trimming
+                    recording = Recording.query.get(recording_id)
+                    recording.status = 'completed'
                     if os.path.exists(session.output_path):
                         recording.file_size = os.path.getsize(session.output_path)
                         recording.duration_seconds = session.get_duration()
@@ -119,11 +133,26 @@ class RecordingManager:
             with app.app_context():
                 recording = Recording.query.get(recording_id)
                 if recording:
-                    recording.status = 'stopped'
+                    recording.status = 'processing'
                     recording.ended_at = datetime.utcnow()
+                    recording.file_path = session.output_path
+                    recording.filename = os.path.basename(session.output_path) if session.output_path else None
+                    db.session.commit()
+                    
+                    # Auto-trim black frames from start
                     if session.output_path and os.path.exists(session.output_path):
-                        recording.file_path = session.output_path
-                        recording.filename = os.path.basename(session.output_path)
+                        from app.trimmer import auto_trim_recording
+                        logger.info(f"Auto-trimming stopped recording {recording_id}")
+                        trim_result = auto_trim_recording(session.output_path)
+                        if trim_result.get('error'):
+                            logger.warning(f"Trim warning: {trim_result['error']}")
+                        elif trim_result.get('trimmed'):
+                            logger.info(f"Trimmed {trim_result['trim_seconds']:.1f}s of black frames")
+                    
+                    # Update file info after trimming
+                    recording = Recording.query.get(recording_id)
+                    recording.status = 'stopped'
+                    if session.output_path and os.path.exists(session.output_path):
                         recording.file_size = os.path.getsize(session.output_path)
                         recording.duration_seconds = session.get_duration()
                     db.session.commit()

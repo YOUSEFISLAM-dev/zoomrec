@@ -230,6 +230,7 @@
         .status-pending { background: #6c757d; color: #fff; }
         .status-joining { background: #17a2b8; color: #fff; }
         .status-recording { background: var(--success-color); color: #0c1020; animation: pulse 2s infinite; }
+        .status-processing { background: #6f42c1; color: #fff; }
         .status-completed { background: var(--primary-color); color: #0c1020; }
         .status-failed { background: var(--danger-color); color: #fff; }
         .status-stopped { background: var(--warning-color); color: #0c1020; }
@@ -359,6 +360,12 @@
         .icon-btn-img {
             width: 18px;
             height: 18px;
+            object-fit: contain;
+        }
+
+        .icon-badge-img {
+            width: 14px;
+            height: 14px;
             object-fit: contain;
         }
 
