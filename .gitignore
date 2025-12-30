@@ -15,7 +15,6 @@ env/
 *.db
 instance/
 
-
 # IDE
 .idea/
 .vscode/
@@ -39,3 +38,44 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Runtime / system generated (VERY IMPORTANT)
+.config/
+.runtime/
+.cache/
+*.pid
+*.socket
+
+# Pulse / audio temp
+pulse/
+pulseaudio/
+
+# Allow recordings folder, but ignore temporary/aux files inside it
+recordings/*.tmp
+recordings/*.log
+recordings/*.wav
+recordings/*.part
+recordings/*.crdownload
+
+# Specific generated folders/files you don't want in repo
+vid/
+zoomrec.zip
+
+# Archives / packages
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Secrets / keys / envs
+*.pem
+*.key
+
+# OS-specific caches
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+docker-compose.override.yml
+.env.*.local

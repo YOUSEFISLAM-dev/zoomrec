@@ -1,28 +1,20 @@
-# Simple workflow for deploying static content to GitHub Pages
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
@@ -31,13 +23,54 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show workspace summary (debug)
+        run: |
+          echo "=== Files top-level ==="
+          ls -la || true
+          echo "=== Recordings preview ==="
+          ls -la recordings || true
+          echo "=== Disk usage (repo) ==="
+          du -sh . || true
+
+      - name: Clean runtime / temp files (KEEP recordings/*.mp4)
+        run: |
+          # remove pulse/runtime caches that break tar when upload runs concurrently
+          rm -rf .config .runtime .cache pulse pulseaudio || true
+          # remove any archive we don't want included
+          rm -f zoomrec.zip || true
+          # optionally remove env and other secrets (safety)
+          rm -f .env || true
+          echo "Clean done."
+
+      - name: Show recordings size (so you know artifact size)
+        run: |
+          if [ -d "recordings" ]; then
+            echo "Recordings DU:"
+            du -sh recordings || true
+            echo "List recordings (up to 200 lines):"
+            ls -la recordings | head -n 200 || true
+          else
+            echo "No recordings dir present."
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload artifact
+
+      - name: Upload artifact (include recordings)
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Explicitly list only the files/folders you want published.
+          # Keep recordings to include your .mp4 files.
+          path: |
+            index.html
+            README.md
+            app/
+            app/static/
+            app/templates/
+            recordings/
+            vid/
+            # add any other folders / files that should be published
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
