@@ -15,11 +15,6 @@ env/
 *.db
 instance/
 
-# Recordings
-recordings/
-*.mp4
-*.webm
-*.mkv
 
 # IDE
 .idea/
